@@ -1,0 +1,27 @@
+include ../../../src/views/index
+
+
+
+-
+	let title
+
+
+
+block variables
+
+
+
+doctype html
+html(lang="en" dir="ltr")
+	head
+		meta(charset="UTF-8")
+		meta(name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover")
+		title= (title ? `${title} | ` : '') + 'Picture'
+		block styles
+			link(href="/examples/assets/styles/main.css" rel="stylesheet")
+		block scripts-head
+
+	body
+		block body
+
+		block scripts
