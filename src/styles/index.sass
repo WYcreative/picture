@@ -1,5 +1,13 @@
-picture
-	img
-		width: 100%
-		height: auto
-		display: block
+/// Generates the default `picture` styles.
+///
+/// @argument {number | string | calculation} $width [100%] - The `picture img` width.
+///
+/// @output the `picture` default styles.
+
+=picture ($width: 100%)
+
+	picture
+		img
+			width: $width
+			height: auto
+			display: block
