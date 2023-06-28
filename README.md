@@ -7,7 +7,7 @@
 
 - [Node.js](https://nodejs.org/en/) 18.16 or later
 - [npm](https://www.npmjs.com/) 9.5 or later
-- [Gulp CLI](https://gulpjs.com) 2.2 or later
+- [Gulp CLI](https://gulpjs.com) 2.3 or later
 
 ## Installation
 
