@@ -3,4 +3,52 @@ extends _layouts/base
 
 
 block body
-	h1 Welcome to the Picture example!
+	- __picture_defaults.path = '/examples/assets/images'
+
+	+picture({
+		width: 600,
+		height: 400,
+	})
+
+	+picture({
+		sources: [
+			{
+				width: 800,
+				height: 400,
+				media: '(min-width: 800px)',
+				background: 'blue',
+			},
+			{
+				width: 640,
+				height: 480,
+				media: '(min-width: 640px)',
+				text: 'Dolor Sit Amet',
+			},
+		],
+		width: 320,
+		height: 240,
+		background: 'red',
+		color: 'white',
+		text: 'Lorem Ipsum',
+		alt: 'Lorem Ipsum',
+		extensions: ['webp', 'png'],
+		lazy: true,
+	})
+
+	+picture({
+		sources: [
+			{
+				images: {
+					'1x': 'canical',
+				},
+				media: '(min-width: 800px)',
+				width: 1920,
+				height: 1279,
+			},
+		],
+		image: 'hummingbird',
+		width: 640,
+		height: 426,
+		extensions: ['webp', 'jpg'],
+		lazy: true,
+	})

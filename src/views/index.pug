@@ -1,0 +1,247 @@
+-
+	const __picture_defaults = {
+		path: undefined,
+		extensions: [
+			'jpg',
+		],
+		lazy: false,
+	}
+
+//- @pugdoc
+	Creates picture.
+
+	@param {Object} options - The picture options.
+	@param {Object[]} [options.sources] - The list of sources.
+		If not defined, a placeholder source will be used instead, using the options defined for the fallback `img` element.
+	@param {{String: String}} [options.sources[].images] - The list of source images.
+		The key should be a descriptor, and the value should the source image URL.
+		If the URL doesn't start with `http://`, `https://`, `/`, `./`, or `../`, it will have the value defined in `options.path` prepended to it.
+		The extension in `options.extension` is appended automatically, if not specified.
+		If not defined, two placeholders with the descriptors `1x` and `2x` will be used instead.
+	@param {Number} [options.sources[].width] - The source width.
+		If not defined, `options.width` will be used instead.
+	@param {Number} [options.sources[].height] - The source height.
+		If not defined, `options.height` will be used instead.
+	@param {String} [options.sources[].background] - The source's placeholder image background in hexadecimal notation or CSS name color.
+		If not defined, `options.background` will be used instead.
+	@param {String} [options.sources[].color] - The source's placeholder image text color in hexadecimal notation or CSS name color.
+		If not defined, `options.color` will be used instead.
+	@param {String} [options.sources[].text] - The source's placeholder image text.
+		If not defined, `options.text` will be used instead.
+	@param {String[]} [options.sources[].extensions] - The source images' extensions.
+		If not defined, `options.extensions` will be used instead.
+	@param {String} [options.sources[].media] - The source's media query.
+	@param {String} [options.image] - The fallback image URL for the `img` element.
+		If the value doesn't start with `http://`, `https://`, `/`, `./`, or `../`, it will have the value defined in `options.path` prepended to it.
+		The extension in `options.extension` is appended automatically, if not specified.
+		If not set, a placeholder image will be used instead.
+	@param {Number} options.width - The image width.
+	@param {Number} options.height - The image height.
+	@param {String} [options.background] - The placeholder image background in hexadecimal notation or CSS name color.
+		If not set, a random color will be used instead.
+	@param {String} [options.color] - The placeholder image text color in hexadecimal notation or CSS name color.
+		If not set, a random color will be used instead.
+	@param {String} [options.text] - The placeholder image text.
+		If not set, the image dimensions will be used instead.
+	@param {String} [options.alt = ''] - The image alternative text.
+	@param {String} [options.path] - The default image path.
+	@param {String[]} [options.extensions = ['jpg']] - The images' extensions.
+		If more than one is set, the last one will be used as fallback for the `img` element, if none is defined already.
+	@param {Boolean} [options.lazy = false] - Wether the picture should be lazy loaded.
+
+
+	@attributes * - The attributes for the `picture` element.
+
+	@returns {HTMLPictureElement} The picture instance.
+
+mixin picture(options)
+
+	//- Helpers.
+	//- ----------------------------------------------------------------------------
+	-
+		//- Get color from a string hash.
+		const stringToColor = string => {
+			let hash = 0
+
+			for (let i = 0; i < string.length; i++) {
+				hash = string.codePointAt(i) + ((hash << 5) - hash)
+			}
+
+			let color = '#'
+
+			for (let i = 0; i < 3; i++) {
+				const value = (hash >> (i * 8)) & 0xFF
+
+				color += ('00' + value.toString(16)).slice(-2)
+			}
+
+			return color
+		}
+
+		//- Create placeholder image URL.
+		const placeholder = (placeholderOptions) =>
+			'https://placehold.co/'
+			+ `${placeholderOptions.width * placeholderOptions.multiplier}x${placeholderOptions.height * placeholderOptions.multiplier}`
+			+ '/'
+			+ (
+				placeholderOptions.background
+					? placeholderOptions.background.slice(placeholderOptions.background.startsWith('#') ? 1 : 0)
+					: stringToColor(`${placeholderOptions.width * placeholderOptions.multiplier}x${placeholderOptions.height * placeholderOptions.multiplier}/${placeholderOptions.text || ''}`).slice(1)
+			)
+			+ '/'
+			+ (
+				placeholderOptions.color
+					? placeholderOptions.color.slice(placeholderOptions.color.startsWith('#') ? 1 : 0)
+					: '999'
+			)
+			+ `.${placeholderOptions.extension}`
+			+ (
+				placeholderOptions.text
+					? `?text=${placeholderOptions.text.replaceAll(' ', '+')}`
+					: ''
+			)
+
+
+	//- Validate and normalize options.
+	//- ----------------------------------------------------------------------------
+
+	// Ensure that `options` is an object.
+	if typeof options !== 'object' && options !== null
+		- throw new Error(`[Picture Mixin]\n  The argument 'options' only accepts objects. Got the ${typeof options} \`${options}\`.`)
+
+	//- Use defaults for undefined options.
+	if options.path === undefined
+		- options.path = __picture_defaults.path
+
+	if options.extensions === undefined
+		- options.extensions = __picture_defaults.extensions
+
+	if options.lazy === undefined
+		- options.lazy = __picture_defaults.lazy
+
+	//- Ensure that `options.width` and `options.height` are numbers.
+	each value, name in {width: options.width, height: options.height}
+		if typeof value !== 'number'
+			- throw new Error(`[Picture Mixin]\n  The argument 'options.${name}' only accepts numbers. Got the ${typeof value} \`${value}\`.`)
+
+	//- Prepare sources.
+	- const sources = []
+
+	//- Ensure that `options.sources` is an array or `undefined`.
+	if Array.isArray(options.sources) === false
+		//- If `undefined`, create an empty source.
+		if options.sources === undefined
+			- options.sources = [{}]
+		else
+			- throw new TypeError(`[Picture Mixin]\n  The property 'options.sources' only accepts arrays. Got the ${typeof options.sources} \`${options.sources}\`.`)
+
+	//- Normalize sources.
+	each source in options.sources
+		//- Validate source first, if defined.
+		if source.images
+			//- Ensure that the source is always an object.
+			if typeof source.images !== 'object'
+				- throw new TypeError(`[Picture Mixin]\n  The property 'options.sources[].images' only accepts objects. Got the ${typeof source.images} \`${source.images}\`.`)
+
+			each image in Object.entries(source.images)
+				- const [descriptor, url] = image
+
+				//- Ensure a valid descriptor. Should be a number followed by `x` or `w`, like `1x` or `200w`.
+				if /^\d+[xw]$/.test(descriptor) === false
+					- throw new Error(`[Picture Mixin]\n  Invalid image descriptor \`${descriptor}\`. Should be a number followed by \`x\` or \`w\`, like \`1x\` or \`200w\`.`)
+
+				//- Ensure that the URL value is a string.
+				if typeof url !== 'string'
+					- throw new Error(`[Picture Mixin]\n  The property values of the property 'images' only accepts URL strings. Got the ${typeof url} \`${url}\`.`)
+
+		//- Create a source for each provided extension, either from the source object or from the root options.
+		each extension in (source.extensions || options.extensions)
+			//- Create base source properties.
+			-
+				const item = {
+					width: source.width || options.width,
+					height: source.height || options.height,
+					media: source.media,
+					type: (extension === 'webp' ? 'image/webp' : null),
+				}
+
+			//- Normalize image URLs...
+			//- ... or create placeholder images if no images are defined.
+			if source.images
+				- item.images = Object.assign({}, source.images)
+
+				each descriptor in Object.keys(item.images)
+					//- If image has no path defined, fallback to default path.
+					if /^(?:https?:\/|\.{0,2})\//.test(item.images[descriptor]) === false && options.path
+						- item.images[descriptor] = `${options.path}/${item.images[descriptor]}`
+
+					//- If image doesn't end with an extension, append the default one to it.
+					if /\.[a-zA-Z0-9]+$/.test(item.images[descriptor]) === false
+						- item.images[descriptor] += `.${extension}`
+			else
+				-
+					//- Define base placeholder image options.
+					const placeholderOptions = {
+						width: item.width,
+						height: item.height,
+						multiplier: 1,
+						extension,
+						background: item.background || options.background,
+						color: item.color || options.color,
+						text: item.text || options.text,
+					}
+
+					//- Create placeholder images.
+					item.images = {
+						'1x': placeholder(placeholderOptions),
+						'2x': placeholder(Object.assign({}, placeholderOptions, {
+							multiplier: 2,
+						})),
+					}
+
+			//- Append to prepared sources.
+			- sources.push(item)
+
+	//- Normalize fallback image URL.
+	//- ...  or create placeholder image if no fallback image is defined.
+	if options.image
+		//- If image has no path defined, fallback to default path.
+		if /^(?:https?:\/|\.{0,2})\//.test(options.image) === false && options.path
+			- options.image = `${options.path}/${options.image}`
+
+		//- If image doesn't end with an extension, append the default one to it.
+		if /\.[a-zA-Z0-9]+$/.test(options.image) === false && Array.isArray(options.extensions)
+			- options.image += `.${options.extensions.at(-1)}`
+
+	else
+		-
+			options.image = placeholder({
+				width: options.width,
+				height: options.height,
+				multiplier: 1,
+				extension: options.extensions.at(-1),
+				background: options.background,
+				color: options.color,
+				text: options.text,
+			})
+
+
+	//- Output result.
+	//- ----------------------------------------------------------------------------
+	picture&attributes(attributes)
+		each source in sources
+			source(
+				srcset=Object.entries(source.images).map(([descriptor, url]) => `${url} ${descriptor}`).join(', ')
+				media=source.media
+				width=source.width
+				height=source.height
+				type=source.type
+			)
+
+		img(
+			src=options.image
+			width=options.width
+			height=options.height
+			alt=(options.alt || '')
+			loading=(options.lazy ? 'lazy' : null)
+		)
