@@ -12,6 +12,9 @@
   "author": "WYcreative Engineering Team",
   "license": "ISC",
   "type": "module",
+  "files": [
+    "./src/**"
+  ],
   "exports": {
     ".": {
       "sass": "./src/styles/index.sass",
