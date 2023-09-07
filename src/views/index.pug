@@ -105,7 +105,7 @@ mixin picture(options)
 	//- Validate and normalize options.
 	//- ----------------------------------------------------------------------------
 
-	// Ensure that `options` is an object.
+	//- Ensure that `options` is an object.
 	if typeof options !== 'object' && options !== null
 		- throw new Error(`[Picture Mixin]\n  The argument 'options' only accepts objects. Got the ${typeof options} \`${options}\`.`)
 
